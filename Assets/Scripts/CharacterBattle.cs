@@ -26,7 +26,7 @@ public class CharacterBattle : MonoBehaviour
 
         currentHP = baseData.maxHP;
         currentMP = baseData.maxMP;
-        currentPsychological = 0;
+        currentPsychological = baseData.maxPshychological;
 
         Debug.Log($"O personagem {baseData.characterName} entrou na batalha com {currentHP} de vida!");
     }
@@ -53,7 +53,25 @@ public class CharacterBattle : MonoBehaviour
         Debug.Log($"{baseData.characterName} tomou {damageAmount} de dano! HP restante: {currentHP}");
         return false; // Retorna FALSO: Não, ele ainda está vivo.
     }
-    
+
+    public void TakeStress(int stressAmount)
+    {
+        currentPsychological -= stressAmount;
+
+        if (currentPsychological < 0)
+        {
+            currentPsychological = 0;
+        }
+
+        Debug.Log($"{baseData.characterName} sofreu estresse! Mente atual: {currentPsychological}");
+
+        if (currentHP == 0)
+        {
+            Debug.Log($"[Crise] {baseData.characterName} ENTROU EM PÂNICO E PERDEU O CONTROLE!");
+            inactiveTurnsLeft = 1;
+        }
+    }
+
     public bool SpendMP(int amount)
     {
         if (currentMP >= amount)

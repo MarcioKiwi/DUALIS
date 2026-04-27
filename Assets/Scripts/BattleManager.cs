@@ -188,7 +188,11 @@ CharacterBattle enemy = enemyParty[currentTargetIndex];
         int damage = enemy.baseData.baseStrength;
         bool isDead = targetHero.TakeDamage(damage);
 
+        int stressDamage = 15;
+        targetHero.TakeDamage(stressDamage);
+
         playerHUDs[randomTargetIndex].UpdateHP(targetHero.currentHP, targetHero.baseData.maxHP);
+        playerHUDs[randomTargetIndex].UpdatePsychological(targetHero.currentPsychological);
 
         if (isDead)
         {
@@ -199,6 +203,7 @@ CharacterBattle enemy = enemyParty[currentTargetIndex];
         {
             yield return new WaitForSeconds(1f);
             state = BattleState.PLAYERTURN;
+            NextPlayerTurn();
         }
     }
 
@@ -214,8 +219,17 @@ CharacterBattle enemy = enemyParty[currentTargetIndex];
         }
         else
         {
-            state = BattleState.PLAYERTURN;
-            Debug.Log($"É a vez de {playerParty[currentPlayerIndex].baseData.characterName}!");
+            if (playerParty[currentPlayerIndex].inactiveTurnsLeft > 0)
+            {
+                Debug.Log($"--- {playerParty[currentPlayerIndex].baseData.characterName} ESTÁ EM PÂNICO E PERDEU A VEZ! ---");
+                playerParty[currentPlayerIndex].inactiveTurnsLeft--;
+                NextPlayerTurn();
+            }
+            else
+            {
+                state = BattleState.PLAYERTURN;
+                Debug.Log($"É a vez de {playerParty[currentPlayerIndex].baseData.characterName}!");
+            }
         }
     }
 

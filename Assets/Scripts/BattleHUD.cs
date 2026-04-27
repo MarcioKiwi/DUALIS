@@ -12,7 +12,7 @@ public class BattleHUD : MonoBehaviour
     [Header("Barras Visuais")]
     public Slider hpSlider;
     public Slider mpSlider;
-    
+    public Slider psychologycalSlider;
 
     
     public void SetupHUD(CharacterData character, int currentLevel)
@@ -22,11 +22,18 @@ public class BattleHUD : MonoBehaviour
         hpText.text = $"HP: {character.maxHP}/{character.maxHP}";
         hpSlider.maxValue = character.maxHP;
         hpSlider.value = character.maxHP;
+
         if (mpText != null && mpSlider != null)
         {
             mpText.text = $"MP: {character.maxMP}/{character.maxMP}";
             mpSlider.maxValue = character.maxMP;
             mpSlider.value = character.maxMP;
+        }
+
+        if (psychologycalSlider != null)
+        {
+            psychologycalSlider.maxValue = character.maxPshychological;
+            psychologycalSlider.value = character.maxPshychological;
         }
     }
 
@@ -46,6 +53,15 @@ public class BattleHUD : MonoBehaviour
         }
         
     }
+
+    public void UpdatePsychological(int currentPsy)
+    {
+        if (psychologycalSlider != null)
+        {
+            psychologycalSlider.value = currentPsy;
+        }
+    }
+
     public void UpdateLevel(int currentLevel)
     {
         levelText.text = $"Lvl: {currentLevel}";
