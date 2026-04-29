@@ -14,9 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   characterName: Slime
   portrait: {fileID: 0}
-  maxHP: 50
+  maxHP: 200
   maxMP: 10
   baseStrength: 5
   baseDefense: 0
   baseSpeed: 0
+  maxPshychological: 0
   xpReward: 120

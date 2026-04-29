@@ -15,9 +15,9 @@ MonoBehaviour:
   characterName: Waldemar
   portrait: {fileID: 0}
   maxHP: 100
-  maxMP: 0
-  baseStrength: 1
+  maxMP: 20
+  baseStrength: 10
   baseDefense: 0
   baseSpeed: 0
-  maxPshychological: 0
+  maxPshychological: 100
   xpReward: 0

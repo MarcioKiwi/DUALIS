@@ -19,5 +19,5 @@ MonoBehaviour:
   baseStrength: 10
   baseDefense: 0
   baseSpeed: 10
-  maxPshychological: 0
+  maxPshychological: 100
   xpReward: 0
