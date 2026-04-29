@@ -84,6 +84,8 @@ public class BattleManager : MonoBehaviour
         bool isDead = enemy.TakeDamage(damage);
         player.GainPsychological(10);
 
+        playerHUDs[currentPlayerIndex].UpdatePsychological(player.currentPsychological);
+
         enemyHUDs[currentTargetIndex].UpdateHP(enemy.currentHP, enemy.baseData.maxHP);
 
         
@@ -213,7 +215,7 @@ CharacterBattle enemy = enemyParty[currentTargetIndex];
 
         if (currentPlayerIndex >= playerParty.Count)
         {
-            currentPlayerIndex = 0;
+            currentPlayerIndex = -1;
             state = BattleState.ENEMYTURN;
             EnemyTurn();
         }

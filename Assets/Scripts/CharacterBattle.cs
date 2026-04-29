@@ -26,7 +26,7 @@ public class CharacterBattle : MonoBehaviour
 
         currentHP = baseData.maxHP;
         currentMP = baseData.maxMP;
-        currentPsychological = baseData.maxPshychological;
+        currentPsychological = 0;
 
         Debug.Log($"O personagem {baseData.characterName} entrou na batalha com {currentHP} de vida!");
     }

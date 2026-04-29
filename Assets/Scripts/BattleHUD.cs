@@ -33,7 +33,7 @@ public class BattleHUD : MonoBehaviour
         if (psychologycalSlider != null)
         {
             psychologycalSlider.maxValue = character.maxPshychological;
-            psychologycalSlider.value = character.maxPshychological;
+            psychologycalSlider.value = 0;
         }
     }
 
