@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Pocao_Vida
   m_EditorClassIdentifier: 
   nomeItem: "Po\xE7\xE3o de Fang"
-  descricaoItem: "Uma das po\xE7\xF5es de fang capaz de curar feridas"
+  descricaoItem: Cura 20 de HP
   iconeItem: {fileID: 21300000, guid: 117b17facff65dc42b1b57deb7c21551, type: 3}
   tipo: 0
   valorCuraHP: 20

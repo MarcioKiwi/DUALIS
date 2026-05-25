@@ -18,21 +18,21 @@ public class InventoryUI : MonoBehaviour
 
     private TipoDeItem abaAtual = TipoDeItem.Consumivel;
 
+    // NOVIDADE: A "memória" de qual item estamos olhando agora
+    private ItemData itemSelecionado;
+
     void Start()
     {
-        LimparDescricao(); // Garante que a direita comece limpa
+        LimparDescricao();
 
-        // Garante que a esquerda (o grid) comece vazia
         foreach (Transform filho in areaGridItens)
         {
             Destroy(filho.gameObject);
         }
     }
 
-    // --- FUNÇÕES DAS ABAS ---
     public void ClicarAbaConsumiveis()
     {
-        Debug.Log("O botão Consumíveis foi clicado com sucesso!"); // O nosso alarme
         abaAtual = TipoDeItem.Consumivel;
         LimparDescricao();
         AtualizarInterface();
@@ -51,7 +51,6 @@ public class InventoryUI : MonoBehaviour
         LimparDescricao();
         AtualizarInterface();
     }
-    // -------------------------
 
     public void AtualizarInterface()
     {
@@ -71,19 +70,40 @@ public class InventoryUI : MonoBehaviour
         }
     }
 
-    // Essa função agora também faz o botão USAR aparecer
     public void MostrarDescricao(ItemData item)
     {
-        botaoUsar.gameObject.SetActive(true); // Revela o botão
+        itemSelecionado = item; // Guarda o item na memória!
+
+        botaoUsar.gameObject.SetActive(true);
         textoNome.text = item.nomeItem;
-        textoEfeito.text = item.descricaoItem + "\n\nCura HP: " + item.valorCuraHP;
+        textoEfeito.text = item.descricaoItem;
     }
 
-    // A MÁGICA DO POLIMENTO: Esconde tudo!
     public void LimparDescricao()
     {
-        textoNome.text = ""; // Deixa o nome vazio
-        textoEfeito.text = ""; // Deixa o efeito vazio
-        botaoUsar.gameObject.SetActive(false); // Deixa o botão invisível
+        itemSelecionado = null; // Esquece o item
+        textoNome.text = "";
+        textoEfeito.text = "";
+        botaoUsar.gameObject.SetActive(false);
+    }
+
+    // NOVIDADE: A função que o botão USAR vai chamar!
+    public void UsarItemSelecionado()
+    {
+        if (itemSelecionado != null)
+        {
+            // 1. O Efeito: Manda uma mensagem pro Console avisando que curou
+            // (No futuro, é aqui que você vai mandar o código do Jogador aumentar a vida dele)
+            Debug.Log("Você usou: " + itemSelecionado.nomeItem + "! Curou " + itemSelecionado.valorCuraHP + " de HP.");
+
+            // 2. Tira o item da mochila
+            inventoryManager.itenNoInventario.Remove(itemSelecionado);
+
+            // 3. Limpa a tela da direita (o texto e o próprio botão somem)
+            LimparDescricao();
+
+            // 4. Atualiza a tela da esquerda (para a poção sumir do grid de vez)
+            AtualizarInterface();
+        }
     }
 }
