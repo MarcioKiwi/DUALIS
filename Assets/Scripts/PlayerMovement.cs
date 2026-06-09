@@ -7,6 +7,7 @@ public class PlayerMovement : MonoBehaviour
 
     [Header("Componentes")]
     public Rigidbody2D rb;
+    public Animator anim;
 
     private Vector2 movement;
 
@@ -15,6 +16,15 @@ public class PlayerMovement : MonoBehaviour
         movement.x = Input.GetAxisRaw("Horizontal");
         movement.y = Input.GetAxisRaw("Vertical");
         movement = movement.normalized;
+
+        anim.SetFloat("Velocidade", movement.sqrMagnitude);
+
+ 
+        if (movement != Vector2.zero)
+        {
+            anim.SetFloat("MoveX", movement.x);
+            anim.SetFloat("MoveY", movement.y);
+        }
     }
 
     private void FixedUpdate()

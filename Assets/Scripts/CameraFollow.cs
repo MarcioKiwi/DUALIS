@@ -2,23 +2,27 @@ using UnityEngine;
 
 public class CameraFollow : MonoBehaviour
 {
-    [Header("Quem a câmera deve seguir?")]
-    public Transform alvo;
+    [Header("Configurações Básicas")]
+    public Transform alvo; 
+    public float velocidade = 5f;
 
-    [Header("Configurações")]
-    public float suavidade = 5f; // Quanto maior o número, mais rápida/dura é a câmera
+    [Header("Limites do Mapa")]
+    public Vector2 limiteMinimo; // Canto inferior esquerdo
+    public Vector2 limiteMaximo; // Canto superior direito
 
-    // Usamos LateUpdate em vez de Update para a câmera. 
-    // Assim ela só se move DEPOIS que o personagem já andou, evitando "engasgos" na imagem.
     void LateUpdate()
     {
         if (alvo != null)
         {
-            // Pega a posição (X e Y) do personagem, mas mantém o Z da câmera (que descobrimos ser vital!)
-            Vector3 posicaoDesejada = new Vector3(alvo.position.x, alvo.position.y, transform.position.z);
+            float alvoX = alvo.position.x;
+            float alvoY = alvo.position.y;
 
-            // Move a câmera suavemente da posição atual para a posição do personagem
-            transform.position = Vector3.Lerp(transform.position, posicaoDesejada, suavidade * Time.deltaTime);
+            // Aqui a câmera é proibida de passar dos limites
+            float xLimitado = Mathf.Clamp(alvoX, limiteMinimo.x, limiteMaximo.x);
+            float yLimitado = Mathf.Clamp(alvoY, limiteMinimo.y, limiteMaximo.y);
+
+            Vector3 posicaoDesejada = new Vector3(xLimitado, yLimitado, -10f);
+            transform.position = Vector3.Lerp(transform.position, posicaoDesejada, velocidade * Time.deltaTime);
         }
     }
 }
