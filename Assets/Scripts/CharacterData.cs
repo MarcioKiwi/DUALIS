@@ -1,24 +1,23 @@
-using UnityEngine;
-
+ï»¿using UnityEngine;
 
 [CreateAssetMenu(fileName = "New Character Data", menuName = "RPG/Character Data")]
 public class CharacterData : ScriptableObject
 {
-    [Header("Informações Básicas")]
+    [Header("InformaÃ§Ãµes BÃ¡sicas")]
     public string characterName;
-    public Sprite portrait; // A foto do rosto dele no menu
+    public Sprite portrait;
 
     [Header("Atributos de Combate")]
     public int maxHP;
     public int maxMP;
-    public int baseStrength; // Força para ataques físicos
-    public int baseDefense; // Defesa contra ataques
-    public int baseSpeed; // Velocidade (quem tem mais, ataca primeiro no turno)
+    public int baseStrength;
+    public int baseDefense;
+    public int baseSpeed;
 
     [Header("Atributos do Dualis")]
     public int maxPshychological;
 
     [Header("Recompensas")]
     public int xpReward;
+    public int dropPsicologico; // ðŸŸ¢ NOVO: A Moeda do Jogo!
 }
-

@@ -16,8 +16,9 @@ MonoBehaviour:
   portrait: {fileID: 0}
   maxHP: 100
   maxMP: 50
-  baseStrength: 10
+  baseStrength: 20
   baseDefense: 0
   baseSpeed: 10
   maxPshychological: 100
   xpReward: 0
+  dropPsicologico: 0

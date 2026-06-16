@@ -1,11 +1,12 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 public class CharacterBattle : MonoBehaviour
 {
     [Header("A Ficha do Personagem")]
     public CharacterData baseData;
+    private CharacterData originalAdvogadoData;
 
-    [Header("Transformação")]
+    [Header("TransformaÃ§Ã£o")]
     public CharacterData transformedData;
     public bool isTransformed = false;
 
@@ -15,59 +16,71 @@ public class CharacterBattle : MonoBehaviour
     public int currentPsychological;
     public int inactiveTurnsLeft = 0;
 
-    [Header("Progressão")]
+    [Header("ProgressÃ£o")]
     public int level = 1;
     public int currentXP = 0;
     public int xpToNextLevel = 100;
-    
+
     void Awake()
     {
         baseData = Instantiate(baseData);
+        originalAdvogadoData = baseData;
 
+        // ðŸ§  1. LENDO O LEVEL E O XP DO MEMORY CARD
+        int levelSalvo = PlayerPrefs.GetInt("LevelAdvogado", 1);
+        currentXP = PlayerPrefs.GetInt("XPAdvogado", 0); // ðŸŸ¢ NOVO: Puxa o XP acumulado!
+
+        if (levelSalvo > 1)
+        {
+            level = levelSalvo;
+            int bonusLevels = levelSalvo - 1;
+            baseData.maxHP += (10 * bonusLevels);
+            baseData.baseStrength += (2 * bonusLevels);
+
+            // ðŸŸ¢ NOVO: Ajusta dinamicamente a meta de XP baseada no seu nÃ­vel atual
+            xpToNextLevel = 100 + (50 * bonusLevels);
+
+            Debug.Log($"[Dualis] Advogado entrou no NÃ­vel {level} com {currentXP}/{xpToNextLevel} de XP!");
+        }
+
+        // ðŸ§  2. PUXANDO OS UPGRADES DA LOJA CLANDESTINA
+        int bonusVida = PlayerPrefs.GetInt("BonusVida", 0);
+        int bonusMana = PlayerPrefs.GetInt("BonusMana", 0);
+        int bonusForca = PlayerPrefs.GetInt("BonusForca", 0);
+        int bonusPsico = PlayerPrefs.GetInt("BonusPsicologico", 0);
+
+        baseData.maxHP += bonusVida;
+        baseData.maxMP += bonusMana;
+        baseData.baseStrength += bonusForca;
+        originalAdvogadoData.maxPshychological += bonusPsico;
+
+        // 3. ENCHENDO AS BARRAS PARA A LUTA COMEÃ‡AR
         currentHP = baseData.maxHP;
         currentMP = baseData.maxMP;
         currentPsychological = 0;
-
-        Debug.Log($"O personagem {baseData.characterName} entrou na batalha com {currentHP} de vida!");
     }
 
-    
     public bool TakeDamage(int damageAmount)
     {
         int danoReal = damageAmount - baseData.baseDefense;
-
-        if( danoReal < 0)
-        {
-            danoReal = 0;
-        }
-
+        if (danoReal < 0) danoReal = 0;
         currentHP -= danoReal;
-        
+
         if (currentHP <= 0)
         {
             currentHP = 0;
-            Debug.Log($"{baseData.characterName} tomou {damageAmount} de dano e FOI DERROTADO!");
-            return true; // Retorna VERDADEIRO: Sim, ele morreu.
+            return true;
         }
-
-        Debug.Log($"{baseData.characterName} tomou {damageAmount} de dano! HP restante: {currentHP}");
-        return false; // Retorna FALSO: Não, ele ainda está vivo.
+        return false;
     }
 
     public void TakeStress(int stressAmount)
     {
         currentPsychological -= stressAmount;
-
-        if (currentPsychological < 0)
-        {
-            currentPsychological = 0;
-        }
-
-        Debug.Log($"{baseData.characterName} sofreu estresse! Mente atual: {currentPsychological}");
+        if (currentPsychological < 0) currentPsychological = 0;
 
         if (currentHP == 0)
         {
-            Debug.Log($"[Crise] {baseData.characterName} ENTROU EM PÂNICO E PERDEU O CONTROLE!");
             inactiveTurnsLeft = 1;
         }
     }
@@ -79,21 +92,16 @@ public class CharacterBattle : MonoBehaviour
             currentMP -= amount;
             return true;
         }
-        else
-        {
-            return false;
-        }
+        return false;
     }
 
     public void Heal(int amount)
     {
         currentHP += amount;
-
-        if (currentHP > baseData.maxHP)
-        {
-            currentHP = baseData.maxHP;
-        } 
+        if (currentHP > baseData.maxHP) currentHP = baseData.maxHP;
     }
+
+    // ðŸŸ¢ ATUALIZADO: Modificado para atualizar a meta de XP corretamente no Level Up
     public void AddXP(int xpAmount)
     {
         currentXP += xpAmount;
@@ -103,35 +111,60 @@ public class CharacterBattle : MonoBehaviour
         {
             level++;
             currentXP -= xpToNextLevel;
-            xpToNextLevel += 50;
+            xpToNextLevel += 50; // Aumenta a dificuldade do prÃ³ximo nÃ­vel
             baseData.maxHP += 10;
             baseData.baseStrength += 2;
             currentHP = baseData.maxHP;
 
-            Debug.Log($"LEVEL UP!!! {baseData.characterName} alcançou o nível {level}!");
-            Debug.Log($"Novos Status -> HP Máximo: {baseData.maxHP} | Força: {baseData.baseStrength}");
+            Debug.Log($"LEVEL UP!!! {baseData.characterName} alcanÃ§ou o nÃ­vel {level}!");
         }
     }
 
     public void GainPsychological(int amount)
     {
+        if (isTransformed) return;
         currentPsychological += amount;
 
-        if (currentPsychological > baseData.maxPshychological)
+        if (currentPsychological > originalAdvogadoData.maxPshychological)
         {
-            currentPsychological = baseData.maxPshychological;
+            currentPsychological = originalAdvogadoData.maxPshychological;
         }
-        Debug.Log($"{baseData.characterName} bateu e ganhou {amount} de Psicológico! (Atual: {currentPsychological})");
     }
 
     public void Transform()
     {
-        if (!isTransformed && currentPsychological > 0)
+        if (isTransformed) return;
+
+        if (currentPsychological >= originalAdvogadoData.maxPshychological)
         {
             baseData = Instantiate(transformedData);
             isTransformed = true;
-            Debug.Log($"{gameObject.name} se transformou em {baseData.characterName}!");
+        }
+    }
+
+    public void RevertTransform()
+    {
+        if (isTransformed)
+        {
+            baseData = originalAdvogadoData;
+            isTransformed = false;
+            currentPsychological = 0;
+        }
+    }
+
+    public void OnRoundEnd()
+    {
+        if (isTransformed)
+        {
+            int dreno = Mathf.CeilToInt(originalAdvogadoData.maxPshychological * 0.20f);
+            currentPsychological -= dreno;
+
+            if (currentPsychological <= 0)
+            {
+                currentPsychological = 0;
+                RevertTransform();
+                inactiveTurnsLeft = 2;
+            }
         }
     }
 }
-

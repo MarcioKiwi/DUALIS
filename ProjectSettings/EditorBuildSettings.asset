@@ -6,8 +6,19 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/SampleScene.unity
+    path: Assets/Scenes/Menu_Principal.unity
+    guid: 5eb290c531144784d933ce12d36a285b
+  - enabled: 1
+    path: Assets/Scenes/Cena_Intro.unity
+    guid: 4a45976a5ecec4a46b85f1baa89f446b
+  - enabled: 1
+    path: Assets/Scenes/Zona Industrial.unity
+    guid: 960873023179eee49889a935f018a169
+  - enabled: 1
+    path: Assets/Scenes/Cena_Batalha.unity
     guid: 8c9cfa26abfee488c85f1582747f6a02
-  m_configObjects:
-    com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
+  - enabled: 1
+    path: Assets/Scenes/Cena_Batalha_Elite.unity
+    guid: 1077de3041db83743ac1dd9d0a5ae2e4
+  m_configObjects: {}
   m_UseUCBPForAssetBundles: 0
