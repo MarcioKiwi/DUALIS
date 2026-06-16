@@ -1,63 +1,121 @@
-using UnityEngine;
+Ôªøusing UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 
 public class InventoryUI : MonoBehaviour
 {
-    [Header("Conex„o com a Mochila")]
+    [Header("Conex√£o com a Mochila")]
     public InventoryManager inventoryManager;
+    public CharacterData fichaDoAdvogado;
 
-    [Header("Onde os itens v„o aparecer")]
+    [Header("Paineis Principais")]
+    public GameObject painelInventarioInteiro; 
+    public GameObject areaDosItens;
+    public GameObject painelStatus;
+
+    [Header("Onde os itens v√£o aparecer")]
     public Transform areaGridItens;
     public GameObject slotPrefab;
 
-    [Header("Painel de DescriÁ„o")]
+    [Header("Painel de Descri√ß√£o / Status")]
     public TextMeshProUGUI textoNome;
     public TextMeshProUGUI textoEfeito;
     public Button botaoUsar;
 
     private TipoDeItem abaAtual = TipoDeItem.Consumivel;
-
-    // NOVIDADE: A "memÛria" de qual item estamos olhando agora
     private ItemData itemSelecionado;
 
     void Start()
     {
         LimparDescricao();
-
-        foreach (Transform filho in areaGridItens)
-        {
-            Destroy(filho.gameObject);
-        }
+        painelStatus.SetActive(false);
+        areaDosItens.SetActive(true);
+        AtualizarInterface();
     }
 
-    public void ClicarAbaConsumiveis()
+    
+    void OnEnable()
     {
         abaAtual = TipoDeItem.Consumivel;
         LimparDescricao();
+
+        if (painelStatus != null) painelStatus.SetActive(false);
+        if (areaDosItens != null) areaDosItens.SetActive(true);
+
         AtualizarInterface();
     }
 
-    public void ClicarAbaEquipaveis()
+    public void FecharInventario()
     {
-        abaAtual = TipoDeItem.Equipavel;
+        // Se o painel de status estiver ativo, o bot√£o de voltar APENAS volta para os itens
+        if (painelStatus != null && painelStatus.activeSelf)
+        {
+            painelStatus.SetActive(false);
+            areaDosItens.SetActive(true);
+            LimparDescricao();
+            AtualizarInterface();
+        }
+        // Se o painel de status j√° estiver fechado (ou seja, o jogador j√° est√° na tela de itens)
+        else
+        {
+            // A√≠ sim, o bot√£o fecha o invent√°rio inteiro!
+            if (painelInventarioInteiro != null)
+            {
+                painelInventarioInteiro.SetActive(false);
+            }
+        }
+    }
+
+    // --- ABAS DE ITENS ---
+    public void ClicarAbaConsumiveis() { MudarAba(TipoDeItem.Consumivel); }
+    public void ClicarAbaEquipaveis() { MudarAba(TipoDeItem.Equipavel); }
+    public void ClicarAbaImportantes() { MudarAba(TipoDeItem.Importante); }
+
+    private void MudarAba(TipoDeItem novaAba)
+    {
+        painelStatus.SetActive(false);
+        areaDosItens.SetActive(true);
+        abaAtual = novaAba;
         LimparDescricao();
         AtualizarInterface();
     }
 
-    public void ClicarAbaImportantes()
+    public void ClicarAbaStatus()
     {
-        abaAtual = TipoDeItem.Importante;
+        areaDosItens.SetActive(false);
+        painelStatus.SetActive(true);
         LimparDescricao();
-        AtualizarInterface();
+
+        // 1. Resgata o n√≠vel e o dinheiro
+        int levelAtual = PlayerPrefs.GetInt("LevelAdvogado", 1);
+        int pontosPsicologicos = PlayerPrefs.GetInt("PontosPsicologico", 0);
+        int xpAtual = PlayerPrefs.GetInt("XPAdvogado", 0);
+
+        // 2. üü¢ Resgata todos os b√¥nus comprados na Est√°tua Arcana
+        int bonusVida = PlayerPrefs.GetInt("BonusVida", 0);
+        int bonusMana = PlayerPrefs.GetInt("BonusMana", 0);
+        int bonusForca = PlayerPrefs.GetInt("BonusForca", 0);
+        int bonusMental = PlayerPrefs.GetInt("BonusPsicologico", 0);
+
+        // 3. üü¢ Calcula o valor REAL (Base + Level + B√¥nus da Est√°tua)
+        int hpReal = fichaDoAdvogado.maxHP + (10 * (levelAtual - 1)) + bonusVida;
+        int mpReal = fichaDoAdvogado.maxMP + bonusMana;
+        int forcaReal = fichaDoAdvogado.baseStrength + bonusForca;
+
+        // 4. Escreve na tela mostrando o total e o quanto veio da loja
+        textoNome.text = "Status de " + fichaDoAdvogado.characterName;
+
+        textoEfeito.text = $"N√≠vel Atual: {levelAtual}\n" +
+                           $"Pontos Psicol√≥gicos (Moeda): {pontosPsicologicos}\n\n" +
+                           $"Vida M√°xima (HP): {hpReal} (B√¥nus: +{bonusVida})\n" +
+                           $"Mana M√°xima (MP): {mpReal} (B√¥nus: +{bonusMana})\n" +
+                           $"For√ßa de Ataque: {forcaReal} (B√¥nus: +{bonusForca})\n" +
+                           $"Sanidade: {bonusMental}";
     }
 
     public void AtualizarInterface()
     {
-        foreach (Transform filho in areaGridItens)
-        {
-            Destroy(filho.gameObject);
-        }
+        foreach (Transform filho in areaGridItens) Destroy(filho.gameObject);
 
         foreach (ItemData item in inventoryManager.itenNoInventario)
         {
@@ -65,6 +123,8 @@ public class InventoryUI : MonoBehaviour
             {
                 GameObject novoSlot = Instantiate(slotPrefab, areaGridItens);
                 novoSlot.GetComponent<Image>().sprite = item.iconeItem;
+
+                
                 novoSlot.GetComponent<Button>().onClick.AddListener(() => MostrarDescricao(item));
             }
         }
@@ -72,8 +132,7 @@ public class InventoryUI : MonoBehaviour
 
     public void MostrarDescricao(ItemData item)
     {
-        itemSelecionado = item; // Guarda o item na memÛria!
-
+        itemSelecionado = item;
         botaoUsar.gameObject.SetActive(true);
         textoNome.text = item.nomeItem;
         textoEfeito.text = item.descricaoItem;
@@ -81,28 +140,19 @@ public class InventoryUI : MonoBehaviour
 
     public void LimparDescricao()
     {
-        itemSelecionado = null; // Esquece o item
+        itemSelecionado = null;
         textoNome.text = "";
         textoEfeito.text = "";
         botaoUsar.gameObject.SetActive(false);
     }
 
-    // NOVIDADE: A funÁ„o que o bot„o USAR vai chamar!
     public void UsarItemSelecionado()
     {
         if (itemSelecionado != null)
         {
-            // 1. O Efeito: Manda uma mensagem pro Console avisando que curou
-            // (No futuro, È aqui que vocÍ vai mandar o cÛdigo do Jogador aumentar a vida dele)
-            Debug.Log("VocÍ usou: " + itemSelecionado.nomeItem + "! Curou " + itemSelecionado.valorCuraHP + " de HP.");
-
-            // 2. Tira o item da mochila
+            Debug.Log("Voc√™ usou: " + itemSelecionado.nomeItem);
             inventoryManager.itenNoInventario.Remove(itemSelecionado);
-
-            // 3. Limpa a tela da direita (o texto e o prÛprio bot„o somem)
             LimparDescricao();
-
-            // 4. Atualiza a tela da esquerda (para a poÁ„o sumir do grid de vez)
             AtualizarInterface();
         }
     }

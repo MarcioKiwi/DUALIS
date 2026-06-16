@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-using UnityEngine.SceneManagement; // <-- IMPORTANTE: Biblioteca que permite mudar de cena!
+using UnityEngine.SceneManagement; 
 
 public class IA_Inimigo : MonoBehaviour
 {
@@ -56,15 +56,19 @@ public class IA_Inimigo : MonoBehaviour
     {
         transform.position = Vector2.MoveTowards(transform.position, alvo.position, velocidadePerseguicao * Time.deltaTime);
     }
-
-    // 🔥 A MÁGICA DA TRANSIÇÃO ACONTECE AQUI
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        // Verifica se o objeto que o zumbi encostou tem a etiqueta "Player"
         if (collision.gameObject.CompareTag("Player"))
         {
             Debug.Log("Zumbi pegou o Advogado! Mudando de cena...");
-            // Carrega a cena com o nome escrito na variável
+
+            PlayerPrefs.SetFloat("PosX", collision.transform.position.x);
+            PlayerPrefs.SetFloat("PosY", collision.transform.position.y);
+            Inimigo_Mapa configMapa = GetComponent<Inimigo_Mapa>();
+            if (configMapa != null)
+            {
+                PlayerPrefs.SetString("InimigoAtualNoMapa", configMapa.chaveDeMorte);
+            }
             SceneManager.LoadScene(nomeDaCenaDeBatalha);
         }
     }

@@ -4,7 +4,7 @@ public class CharacterBattle : MonoBehaviour
 {
     [Header("A Ficha do Personagem")]
     public CharacterData baseData;
-    private CharacterData originalAdvogadoData; // 🧠 Memória para poder voltar a ser Advogado!
+    private CharacterData originalAdvogadoData;
 
     [Header("Transformação")]
     public CharacterData transformedData;
@@ -24,51 +24,63 @@ public class CharacterBattle : MonoBehaviour
     void Awake()
     {
         baseData = Instantiate(baseData);
-        originalAdvogadoData = baseData; // Guarda o Advogado em segurança antes de qualquer coisa
+        originalAdvogadoData = baseData;
 
+        // 🧠 1. LENDO O LEVEL E O XP DO MEMORY CARD
+        int levelSalvo = PlayerPrefs.GetInt("LevelAdvogado", 1);
+        currentXP = PlayerPrefs.GetInt("XPAdvogado", 0); // 🟢 NOVO: Puxa o XP acumulado!
+
+        if (levelSalvo > 1)
+        {
+            level = levelSalvo;
+            int bonusLevels = levelSalvo - 1;
+            baseData.maxHP += (10 * bonusLevels);
+            baseData.baseStrength += (2 * bonusLevels);
+
+            // 🟢 NOVO: Ajusta dinamicamente a meta de XP baseada no seu nível atual
+            xpToNextLevel = 100 + (50 * bonusLevels);
+
+            Debug.Log($"[Dualis] Advogado entrou no Nível {level} com {currentXP}/{xpToNextLevel} de XP!");
+        }
+
+        // 🧠 2. PUXANDO OS UPGRADES DA LOJA CLANDESTINA
+        int bonusVida = PlayerPrefs.GetInt("BonusVida", 0);
+        int bonusMana = PlayerPrefs.GetInt("BonusMana", 0);
+        int bonusForca = PlayerPrefs.GetInt("BonusForca", 0);
+        int bonusPsico = PlayerPrefs.GetInt("BonusPsicologico", 0);
+
+        baseData.maxHP += bonusVida;
+        baseData.maxMP += bonusMana;
+        baseData.baseStrength += bonusForca;
+        originalAdvogadoData.maxPshychological += bonusPsico;
+
+        // 3. ENCHENDO AS BARRAS PARA A LUTA COMEÇAR
         currentHP = baseData.maxHP;
         currentMP = baseData.maxMP;
         currentPsychological = 0;
-
-        Debug.Log($"O personagem {baseData.characterName} entrou na batalha com {currentHP} de vida!");
     }
 
     public bool TakeDamage(int damageAmount)
     {
         int danoReal = damageAmount - baseData.baseDefense;
-
-        if (danoReal < 0)
-        {
-            danoReal = 0;
-        }
-
+        if (danoReal < 0) danoReal = 0;
         currentHP -= danoReal;
 
         if (currentHP <= 0)
         {
             currentHP = 0;
-            Debug.Log($"{baseData.characterName} tomou {damageAmount} de dano e FOI DERROTADO!");
             return true;
         }
-
-        Debug.Log($"{baseData.characterName} tomou {damageAmount} de dano! HP restante: {currentHP}");
         return false;
     }
 
     public void TakeStress(int stressAmount)
     {
         currentPsychological -= stressAmount;
-
-        if (currentPsychological < 0)
-        {
-            currentPsychological = 0;
-        }
-
-        Debug.Log($"{baseData.characterName} sofreu estresse! Mente atual: {currentPsychological}");
+        if (currentPsychological < 0) currentPsychological = 0;
 
         if (currentHP == 0)
         {
-            Debug.Log($"[Crise] {baseData.characterName} ENTROU EM PÂNICO E PERDEU O CONTROLE!");
             inactiveTurnsLeft = 1;
         }
     }
@@ -80,22 +92,16 @@ public class CharacterBattle : MonoBehaviour
             currentMP -= amount;
             return true;
         }
-        else
-        {
-            return false;
-        }
+        return false;
     }
 
     public void Heal(int amount)
     {
         currentHP += amount;
-
-        if (currentHP > baseData.maxHP)
-        {
-            currentHP = baseData.maxHP;
-        }
+        if (currentHP > baseData.maxHP) currentHP = baseData.maxHP;
     }
 
+    // 🟢 ATUALIZADO: Modificado para atualizar a meta de XP corretamente no Level Up
     public void AddXP(int xpAmount)
     {
         currentXP += xpAmount;
@@ -105,7 +111,7 @@ public class CharacterBattle : MonoBehaviour
         {
             level++;
             currentXP -= xpToNextLevel;
-            xpToNextLevel += 50;
+            xpToNextLevel += 50; // Aumenta a dificuldade do próximo nível
             baseData.maxHP += 10;
             baseData.baseStrength += 2;
             currentHP = baseData.maxHP;
@@ -116,78 +122,48 @@ public class CharacterBattle : MonoBehaviour
 
     public void GainPsychological(int amount)
     {
-        // Se já estiver transformado, ele não ganha mais psicológico (já está no topo drenando)
         if (isTransformed) return;
-
         currentPsychological += amount;
 
-        // Usei a grafia 'maxPshychological' do seu ScriptableObject original
         if (currentPsychological > originalAdvogadoData.maxPshychological)
         {
             currentPsychological = originalAdvogadoData.maxPshychological;
         }
-        Debug.Log($"{baseData.characterName} ganhou {amount} de Psicológico! (Atual: {currentPsychological}/{originalAdvogadoData.maxPshychological})");
     }
 
-    // 🔥 MUDANÇA: Agora o jogador ESCOLHE clicar aqui através de um botão
     public void Transform()
     {
-        if (isTransformed)
-        {
-            Debug.LogWarning("Já está transformado!");
-            return;
-        }
+        if (isTransformed) return;
 
-        // Só permite se a barra estiver em 100% (igual ou maior ao máximo)
         if (currentPsychological >= originalAdvogadoData.maxPshychological)
         {
             baseData = Instantiate(transformedData);
             isTransformed = true;
-            Debug.Log($"🔥 OBJEÇÃO ARTIFACT! Se transformou em {baseData.characterName}!");
-
-            // TODO: Aqui você avisa o BattleHUD para atualizar os textos/barras se os status mudarem
-        }
-        else
-        {
-            Debug.Log("Psicológico ainda não está em 100% para transformar!");
         }
     }
 
-    // ⚖️ NOVO MÉTODO: Traz o Advogado de volta
     public void RevertTransform()
     {
         if (isTransformed)
         {
-            baseData = originalAdvogadoData; // Puxa o Advogado de volta da memória
+            baseData = originalAdvogadoData;
             isTransformed = false;
-            currentPsychological = 0; // Zera a barra para recomeçar o ciclo
-            Debug.Log($"⚖️ O efeito acabou. Voltou a ser {baseData.characterName}.");
-
-            // TODO: Avisar o BattleHUD para resetar visualmente
+            currentPsychological = 0;
         }
     }
 
-    // ⏳ Drena 20% da barra a cada rodada
-    // Deves chamar esta função no fim de cada ronda
     public void OnRoundEnd()
     {
         if (isTransformed)
         {
-            // Calcula quanto é 20% do valor máximo da barra
             int dreno = Mathf.CeilToInt(originalAdvogadoData.maxPshychological * 0.20f);
             currentPsychological -= dreno;
 
-            Debug.Log($"[Turno] Juiz Arcano a gastar energia. Drenado: {dreno} de Psicológico. Restante: {currentPsychological}");
-
-            // Se a energia acabar, destransforma-se automaticamente e fica atordoado
             if (currentPsychological <= 0)
             {
                 currentPsychological = 0;
-                RevertTransform(); // Volta a ser Advogado
-
-                // 🔥 NOVO: Fica atordoado por 2 rondas inteiras!
+                RevertTransform();
                 inactiveTurnsLeft = 2;
-                Debug.Log($"[Exaustão] A mente do Advogado colapsou! Está atordoado por {inactiveTurnsLeft} rondas.");
             }
         }
     }

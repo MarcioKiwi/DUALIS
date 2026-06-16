@@ -9,7 +9,7 @@ public enum BattleState { START, PLAYERTURN, ENEMYTURN, WON, LOST }
 public class BattleManager : MonoBehaviour
 {
     [Header("Configurações de História")]
-    public bool lutaDoTutorial = true; // 🟢 O interruptor do milagre!
+    public bool lutaDoTutorial = true;
 
     [Header("Estado Atual")]
     public BattleState state;
@@ -24,11 +24,15 @@ public class BattleManager : MonoBehaviour
     public int currentPlayerIndex = 0;
     public int currentTargetIndex = 0;
 
-    public DialogueManager gerenciadorDeDialogo; 
+    public DialogueManager gerenciadorDeDialogo;
 
     [Header("Telas de Fim de Jogo")]
     public GameObject endGamePanel;
     public TextMeshProUGUI resultText;
+
+    public TextMeshProUGUI xpText;
+    public TextMeshProUGUI levelUpText;
+    public TextMeshProUGUI dropsText;
 
     void Start()
     {
@@ -38,14 +42,9 @@ public class BattleManager : MonoBehaviour
 
     void SetupBattle()
     {
-        Debug.Log("A Batalha de Grupos começou");
-
         for (int i = 0; i < playerParty.Count; i++)
         {
-            if (playerParty[i] == null) continue;
-            if (playerParty[i].baseData == null) continue;
-            if (i >= playerHUDs.Count || playerHUDs[i] == null) continue;
-
+            if (playerParty[i] == null || playerParty[i].baseData == null || i >= playerHUDs.Count || playerHUDs[i] == null) continue;
             playerHUDs[i].SetupHUD(playerParty[i].baseData, playerParty[i].level);
         }
 
@@ -64,8 +63,6 @@ public class BattleManager : MonoBehaviour
 
         CharacterBattle player = playerParty[currentPlayerIndex];
         CharacterBattle enemy = enemyParty[currentTargetIndex];
-
-        Debug.Log($"{player.baseData.characterName} ataca com sua espada!");
 
         Animator anim = player.GetComponentInChildren<Animator>();
         if (anim != null) anim.SetTrigger("Atacar");
@@ -102,7 +99,6 @@ public class BattleManager : MonoBehaviour
 
         if (hasEnoughMP)
         {
-            Debug.Log($"{player.baseData.characterName} lançou uma Habilidade Poderosa!");
             playerHUDs[currentPlayerIndex].UpdateMP(player.currentMP, player.baseData.maxMP);
 
             bool isDead = enemy.TakeDamage(magicDamage);
@@ -118,10 +114,6 @@ public class BattleManager : MonoBehaviour
                 NextPlayerTurn();
             }
         }
-        else
-        {
-            Debug.Log("MP Insuficiente! Escolha outra ação.");
-        }
     }
 
     public void PlayerHeal()
@@ -136,33 +128,23 @@ public class BattleManager : MonoBehaviour
 
         if (hasEnoughMP)
         {
-            Debug.Log($"{player.baseData.characterName} usou uma Magia de Cura!");
             player.Heal(healAmount);
-
             playerHUDs[currentPlayerIndex].UpdateHP(player.currentHP, player.baseData.maxHP);
             playerHUDs[currentPlayerIndex].UpdateMP(player.currentMP, player.baseData.maxMP);
-
             NextPlayerTurn();
-        }
-        else
-        {
-            Debug.Log("MP Insuficiente para se curar!");
         }
     }
 
     void EnemyTurn()
     {
         CharacterBattle enemy = enemyParty[currentTargetIndex];
-        Debug.Log($"Turno do inimigo! O {enemy.baseData.characterName} está se preparando...");
         StartCoroutine(EnemyAttackRoutine());
     }
 
     System.Collections.IEnumerator EnemyAttackRoutine()
     {
         CharacterBattle enemy = enemyParty[currentTargetIndex];
-
         yield return new WaitForSeconds(1.5f);
-        Debug.Log($"O {enemy.baseData.characterName} ataca!");
 
         Animator anim = enemy.GetComponentInChildren<Animator>();
         if (anim != null) anim.SetTrigger("Atacar");
@@ -181,13 +163,11 @@ public class BattleManager : MonoBehaviour
 
         if (isDead)
         {
-            // 🟢 Toca a animação de morte!
             Animator animHero = targetHero.GetComponentInChildren<Animator>();
             if (animHero != null) animHero.SetTrigger("Morte");
 
             if (lutaDoTutorial)
             {
-                // 🟢 Inicia a rotina secreta da Estátua
                 StartCoroutine(RotinaDoMilagre(targetHero, randomTargetIndex));
             }
             else
@@ -204,46 +184,31 @@ public class BattleManager : MonoBehaviour
         }
     }
 
-
-    // 🟢 A Mágica Acontece Aqui (Agora com Caixa de Texto!)
     System.Collections.IEnumerator RotinaDoMilagre(CharacterBattle hero, int hudIndex)
     {
-        // 1. Espera 2 segundos para o jogador ver a animação de morte
         yield return new WaitForSeconds(2.0f);
 
-        // 2. Chama a caixa de diálogo na tela (se ela estiver conectada)
         if (gerenciadorDeDialogo != null)
         {
             string[] falasDoMilagre = new string[]
             {
                 "O tempo congela...",
-                "É só isso do que és capaz?",
-                "Última chance, mostre-me que és capaz de possuir tal poder."
+                "É só isso do que é capaz?",
+                "Última chance, mostre-me que é capaz de possuir tal poder."
             };
 
             gerenciadorDeDialogo.MostrarFala("Estátua Arcana", falasDoMilagre);
-
-            // 🛑 MAGIA NEGRA DA PROGRAMAÇÃO: O código PAUSA aqui até a caixa de texto sumir da tela!
             yield return new WaitUntil(() => !gerenciadorDeDialogo.caixaDeDialogo.activeSelf);
         }
-        else
-        {
-            // Se esquecer de arrastar no Inspector, ele ainda avisa no Console para não travar o jogo
-            Debug.Log("O tempo congela... A voz da Estátua ecoa: 'Ainda não é sua hora, Advogado.'");
-        }
 
-        // 3. Enche a vida
         hero.Heal(hero.baseData.maxHP);
         playerHUDs[hudIndex].UpdateHP(hero.currentHP, hero.baseData.maxHP);
 
-        // 4. Toca a animação de voltar à vida
         Animator animHero = hero.GetComponentInChildren<Animator>();
         if (animHero != null) animHero.SetTrigger("Reviver");
 
-        // 5. Desliga o milagre para ele não ser imortal
         lutaDoTutorial = false;
 
-        // 6. Dá um tempinho extra e devolve o turno pro jogador
         yield return new WaitForSeconds(1.5f);
         state = BattleState.PLAYERTURN;
         NextPlayerTurn();
@@ -266,14 +231,12 @@ public class BattleManager : MonoBehaviour
 
             if (playerParty[currentPlayerIndex].inactiveTurnsLeft > 0)
             {
-                Debug.Log($"--- {playerParty[currentPlayerIndex].baseData.characterName} ESTÁ EM PÂNICO E PERDEU A VEZ! ---");
                 playerParty[currentPlayerIndex].inactiveTurnsLeft--;
                 NextPlayerTurn();
             }
             else
             {
                 state = BattleState.PLAYERTURN;
-                Debug.Log($"É a vez de {playerParty[currentPlayerIndex].baseData.characterName}!");
             }
         }
     }
@@ -281,41 +244,71 @@ public class BattleManager : MonoBehaviour
     void EndBattle()
     {
         endGamePanel.SetActive(true);
-        CharacterBattle player = playerParty[currentPlayerIndex];
         CharacterBattle enemy = enemyParty[currentTargetIndex];
+
+        if (xpText != null) xpText.text = "";
+        if (levelUpText != null) levelUpText.text = "";
+        if (dropsText != null) dropsText.text = "";
 
         if (state == BattleState.WON)
         {
-            Debug.Log("VITÓRIA!");
-
-            for (int i = 0; i < playerParty.Count; i++)
-            {
-                playerParty[i].AddXP(enemy.baseData.xpReward);
-                playerHUDs[i].UpdateHP(playerParty[i].currentHP, playerParty[i].baseData.maxHP);
-                playerHUDs[i].UpdateLevel(playerParty[i].level);
-            }
             resultText.text = "VITÓRIA!";
             resultText.color = Color.green;
 
-            // 🟢 MEMORY CARD: Avisa que o zumbi morreu!
-            PlayerPrefs.SetInt("ZumbiTutorialMorto", 1);
+            PlayerPrefs.SetInt("JogadorMorreu", 0);
 
+            int xpGanho = enemy.baseData.xpReward;
+            int moedaGanha = enemy.baseData.dropPsicologico;
+
+            // Salva as moedas
+            int moedaAtual = PlayerPrefs.GetInt("PontosPsicologico", 0);
+            PlayerPrefs.SetInt("PontosPsicologico", moedaAtual + moedaGanha);
+
+            int niveisGanhosTotais = 0;
+
+            for (int i = 0; i < playerParty.Count; i++)
+            {
+                int levelAntes = playerParty[i].level;
+
+                playerParty[i].AddXP(xpGanho); // Distribui o XP e calcula o Level Up
+
+                int levelDepois = playerParty[i].level;
+                niveisGanhosTotais += (levelDepois - levelAntes);
+
+                // GRAVA O PROGRESSO DEFINITIVO DE LEVEL E XP DE CADA HERÓI
+                PlayerPrefs.SetInt("LevelAdvogado", playerParty[i].level);
+                PlayerPrefs.SetInt("XPAdvogado", playerParty[i].currentXP);
+
+                playerHUDs[i].UpdateHP(playerParty[i].currentHP, playerParty[i].baseData.maxHP);
+                playerHUDs[i].UpdateLevel(playerParty[i].level);
+            }
+
+            if (xpText != null) xpText.text = $"+{xpGanho} XP";
+
+            if (levelUpText != null)
+            {
+                if (niveisGanhosTotais > 0)
+                    levelUpText.text = $"LEVEL UP! (+{niveisGanhosTotais} Níveis)";
+                else
+                    levelUpText.gameObject.SetActive(false);
+            }
+
+            if (dropsText != null) dropsText.text = $"Extraído: {moedaGanha} Pontos Psicológicos";
+
+            // 🟢 A MÁGICA ACONTECE AQUI: Lê qual foi o monstro que iniciou a luta e salva a morte DELE.
+            string chaveDoInimigoDerrotado = PlayerPrefs.GetString("InimigoAtualNoMapa", "ZumbiTutorialMorto");
+            PlayerPrefs.SetInt(chaveDoInimigoDerrotado, 1);
         }
         else if (state == BattleState.LOST)
         {
-            Debug.Log("DERROTA...");
             resultText.text = "GAME OVER";
             resultText.color = Color.red;
-
-            // 🟢 MEMORY CARD: Avisa que o jogador morreu (só acontece se não for o milagre)!
             PlayerPrefs.SetInt("JogadorMorreu", 1);
         }
     }
 
-    // 🟢 Função nova para voltar ao mapa! (Lembre-se de colocar ela no seu botão de continuar)
     public void VoltarParaMapa()
     {
-        // Certifique-se de que o nome da cena está EXATAMENTE igual ao seu arquivo
         SceneManager.LoadScene("Zona Industrial");
     }
 }

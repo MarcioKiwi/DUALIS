@@ -1,21 +1,28 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.Audio;
-using TMPro; 
+using TMPro;
 
 public class MenuPrincipal : MonoBehaviour
 {
-    [Header("Configura��es")]
+    [Header("Configurações")]
     public GameObject painelSettings;
     public AudioMixer meuMixer;
 
     [Header("Textos dos Sliders")]
-    public TextMeshProUGUI textoVolMusica;  
-    public TextMeshProUGUI textoVolEfeitos; 
+    public TextMeshProUGUI textoVolMusica;
+    public TextMeshProUGUI textoVolEfeitos;
 
     public void IniciarJogo()
     {
-        SceneManager.LoadScene("Zona Industrial");
+        // 1. Limpa os dados de saves antigos (Moedas, Atributos, etc) para começar do zero
+        PlayerPrefs.DeleteAll();
+
+        // 2. Avisa o jogo que a intro AINDA NÃO foi vista nesse novo save
+        PlayerPrefs.SetInt("IntroConcluida", 0);
+
+        // 3. Manda para a Cena de Introdução (A tela preta com os textos)
+        SceneManager.LoadScene("Cena_Intro");
     }
 
     public void SairDoJogo()
@@ -36,10 +43,15 @@ public class MenuPrincipal : MonoBehaviour
             painelSettings.SetActive(false);
     }
 
+    // 🟢 MUDANÇA AQUI: Botão de Carregar Jogo (Load)
     public void LoadGame()
     {
         if (PlayerPrefs.HasKey("FaseSalva"))
         {
+            // Garante como medida de segurança que a caminhada automática não vai rodar de novo
+            PlayerPrefs.SetInt("IntroConcluida", 1);
+
+            // Carrega o mapa direto de onde o jogador salvou, pulando a cutscene
             string cenaSalva = PlayerPrefs.GetString("FaseSalva");
             SceneManager.LoadScene(cenaSalva);
         }
@@ -53,7 +65,6 @@ public class MenuPrincipal : MonoBehaviour
     {
         meuMixer.SetFloat("VolMusica", Mathf.Log10(valor) * 20);
 
-        
         if (textoVolMusica != null)
         {
             int porcentagem = Mathf.RoundToInt(valor * 100);
@@ -65,7 +76,6 @@ public class MenuPrincipal : MonoBehaviour
     {
         meuMixer.SetFloat("VolSFX", Mathf.Log10(valor) * 20);
 
-        
         if (textoVolEfeitos != null)
         {
             int porcentagem = Mathf.RoundToInt(valor * 100);
